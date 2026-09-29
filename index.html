@@ -161,6 +161,28 @@
   .loading { text-align: center; padding: 90px 0; color: var(--sub); font-size: 14px; }
   .sp { width: 30px; height: 30px; border: 3px solid var(--line); border-top-color: var(--ink); border-radius: 50%; margin: 0 auto 14px; animation: r .8s linear infinite; }
   @keyframes r { to { transform: rotate(360deg); } }
+  /* ---- パソコン（横幅が広いとき） ---- */
+  .grid { display: block; }
+  @media (min-width: 900px) {
+    body { padding-bottom: 40px; }
+    header { padding: 16px 32px 12px; }
+    .wrap, main { max-width: 1180px; }
+    main { padding: 10px 32px 0; }
+    .top { min-height: 44px; }
+    .months { max-width: 420px; margin: 12px 0 0; }
+    nav { top: 18px; bottom: auto; width: 340px; box-shadow: 0 6px 18px rgba(18,18,22,.18); z-index: 7; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 14px; align-items: start; }
+    .grid > .card { margin-bottom: 0; }
+    main > .card, main > .banner { max-width: 720px; }
+    .me-card { max-width: 720px; }
+    .pick { grid-template-columns: repeat(5, 1fr); max-width: 760px; }
+    .hello { font-size: 30px; margin-top: 24px; }
+    .sheet { left: 50%; right: auto; bottom: auto; top: 50%; width: 480px; max-height: 80vh; border-radius: 24px; transform: translate(-50%, -40%); opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; }
+    .sheet.show { transform: translate(-50%, -50%); opacity: 1; pointer-events: auto; }
+    .grip { display: none; }
+    .toast { bottom: 28px; }
+    .opt:hover, .pick button:hover, .cand:hover, .chip:hover { filter: brightness(.97); }
+  }
 </style>
 </head>
 <body>
@@ -280,6 +302,7 @@ function renderInput(m) {
     h += '<div class="card count"><div><b>' + m.month + '月に出たい回数</b><div class="note">目安です（±1回ずれることがあります）</div></div>' +
       '<div class="stepper"><button data-cnt="-1"' + (m.locked ? ' disabled' : '') + '>−</button><span>' + n + '</span><button data-cnt="1"' + (m.locked ? ' disabled' : '') + '>＋</button></div></div>';
   }
+  h += '<div class="grid">';
   m.days.forEach(function (d, i) {
     var cl = clinicsFor(d, info), p = pref[i] || '';
     var fixed = p === 'K' || p === 'B';
@@ -294,6 +317,7 @@ function renderInput(m) {
       '<button class="opt s1' + (p === '1' ? ' on' : '') + '" data-day="' + i + '" data-v="1"' + dis + '>休み希望<small>予定があるため</small></button>' +
       '</div></div>';
   });
+  h += '</div>';
   h += '<div class="note" style="padding:2px 6px 10px">何も選ばない日は「出勤しない」扱いになります。</div>';
   return h;
 }
@@ -318,6 +342,7 @@ function renderShift(m) {
     if (!info.fixed && Math.abs(mine.length - des) >= 2) h += '<div class="gapnote">⚠ 希望の回数と ' + Math.abs(mine.length - des) + ' 回ちがいます。気になる場合はシフト係へ</div>';
     h += '</div><div class="sec">みんなのシフト</div>';
   }
+  h += '<div class="grid">';
   m.days.forEach(function (d, i) {
     var x = r.days[i]; if (!x) return;
     h += '<div class="card"><div class="day-h">' + dateHtml(d.label) + '</div>';
@@ -329,6 +354,7 @@ function renderShift(m) {
         (c[2] ? '<div class="nm short">あと' + c[2] + '人</div>' : '') + '</div></div>';
     }).join('') + '</div></div>';
   });
+  h += '</div>';
   return h;
 }
 
@@ -343,6 +369,7 @@ function renderAdmin(m) {
   if (warn.length) h += '<div class="mini">希望回数と2回以上ちがう人：</div><div class="warnlist">' + warn.map(function (w) { return '<span>' + esc(w.name) + ' 希望' + w.desired + '→' + w.total + '回</span>'; }).join('') + '</div>';
   h += '<div style="margin-top:12px"><button class="btn' + (m.locked ? ' ghost' : '') + '" data-act="lock">' + (m.locked ? '作成中にもどす' : 'この月のシフトを確定する') + '</button></div></div>';
   if (m.locked) return h + '<div class="note" style="padding:0 6px">確定中は修正できません。直すときは「作成中にもどす」を押してください。</div>';
+  h += '<div class="grid">';
   m.days.forEach(function (d, i) {
     var x = r && r.days[i];
     h += '<div class="card"><div class="day-h">' + dateHtml(d.label) + '</div>';
@@ -368,6 +395,7 @@ function renderAdmin(m) {
     }
     h += '</div>';
   });
+  h += '</div>';
   return h;
 }
 
