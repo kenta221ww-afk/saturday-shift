@@ -3,7 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#f4f4f1">
+<meta name="theme-color" content="#f7f6fb">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="土曜シフト">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>土曜シフト</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -154,6 +161,7 @@
   .pick button { display: flex; flex-direction: column; align-items: center; gap: 8px; border: 0; background: var(--card); border-radius: 18px; padding: 15px 4px 13px; font-size: 15px; font-weight: 700; box-shadow: var(--shadow); transition: transform .1s ease; }
   .pick button:active { transform: scale(.96); }
   .pick .av { width: 40px; height: 40px; font-size: 16px; }
+  .tip { margin-top: 18px; } .tip b { font-weight: 900; } .tip .note b { color: #7c3aed; }
   .link { display: block; margin: 22px auto 0; border: 0; background: none; font-size: 13px; font-weight: 700; color: var(--sub); text-decoration: underline; text-underline-offset: 3px; }
 
   .toast { position: fixed; left: 50%; bottom: calc(92px + env(safe-area-inset-bottom)); transform: translateX(-50%) translateY(8px); background: var(--ink); color: #fff; padding: 11px 18px; border-radius: 999px; font-size: 14px; font-weight: 700; opacity: 0; transition: opacity .2s, transform .2s; pointer-events: none; z-index: 30; max-width: calc(100% - 36px); text-align: center; }
@@ -326,7 +334,17 @@ function renderPick() {
   $('main').innerHTML = '<div class="hello">おつかれさまです 👋<br>名前をえらんでください</div>' +
     '<div class="note">次からは自動でひらきます。</div><div class="pick">' +
     S.data.staff.map(function (s) { return '<button data-me="' + esc(s.name) + '">' + av(s.name) + esc(s.name) + '</button>'; }).join('') + '</div>' +
-    '<button class="link" data-act="pinmode">シフト係の方はこちら</button>';
+    '<button class="link" data-act="pinmode">シフト係の方はこちら</button>' + installTip();
+}
+
+// ホーム画面に追加の案内（まだアプリとして開いていないときだけ）
+function installTip() {
+  var standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone;
+  if (standalone || (window.google && google.script) || window.innerWidth >= 900) return '';
+  var ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
+  return '<div class="card tip"><b>📲 アプリのように使えます</b><div class="note">' +
+    (ios ? 'Safariの下の <b>共有ボタン（□↑）</b> →「<b>ホーム画面に追加</b>」' : '右上の <b>︙</b> →「<b>ホーム画面に追加</b>」または「<b>アプリをインストール</b>」') +
+    'で、ホーム画面にアイコンができます。</div></div>';
 }
 
 function clinicsFor(d, info) {
@@ -542,6 +560,8 @@ document.addEventListener('click', function (e) {
   }
 });
 load();
+// ホーム画面アプリ用（GitHub/Vercel で開いたときだけ）
+if ('serviceWorker' in navigator && location.protocol === 'https:' && !(window.google && google.script)) { try { navigator.serviceWorker.register('sw.js'); } catch (e) { } }
 </script>
 </body>
 </html>
