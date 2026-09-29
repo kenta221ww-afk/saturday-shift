@@ -183,6 +183,46 @@
     .toast { bottom: 28px; }
     .opt:hover, .pick button:hover, .cand:hover, .chip:hover { filter: brightness(.97); }
   }
+  /* ===== カラーテーマ（おしゃれ版） ===== */
+  :root { --grad: linear-gradient(120deg, #6366f1 0%, #a855f7 50%, #ec4899 100%); --grad-ok: linear-gradient(135deg, #34d399, #14b8a6); --grad-off: linear-gradient(135deg, #fb7185, #f97316); --glass: rgba(255,255,255,.78); }
+  body { background:
+      radial-gradient(900px 500px at -10% -10%, #e0e7ff 0%, transparent 60%),
+      radial-gradient(800px 500px at 110% 0%, #fce7f3 0%, transparent 55%),
+      radial-gradient(900px 600px at 50% 110%, #d1fae5 0%, transparent 60%),
+      #f7f6fb; background-attachment: fixed; }
+  html { background: #f7f6fb; }
+  header { background: rgba(247,246,251,.72); }
+  .mark { background: var(--grad); box-shadow: 0 6px 16px rgba(168,85,247,.35); }
+  .logo b { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .card { background: var(--glass); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,.7); box-shadow: 0 1px 1px rgba(80,60,140,.03), 0 10px 30px rgba(80,60,140,.08); }
+  .months { background: rgba(255,255,255,.55); border: 1px solid rgba(255,255,255,.8); }
+  .mchip.on { background: var(--grad); color: #fff; box-shadow: 0 6px 14px rgba(168,85,247,.3); }
+  nav { background: rgba(255,255,255,.82); border: 1px solid rgba(255,255,255,.9); box-shadow: 0 14px 34px rgba(80,60,140,.18); }
+  nav button { color: #8b8aa3; }
+  nav button.on { background: var(--grad); color: #fff; box-shadow: 0 6px 14px rgba(168,85,247,.35); }
+  .who { background: rgba(255,255,255,.85); }
+  .ring { background: conic-gradient(#a855f7 0%, #ec4899 calc(var(--p) * 1%), #ece9f6 0); }
+  .opt { background: rgba(255,255,255,.9); border-color: #ebe8f4; }
+  .opt.s3.on { background: var(--grad-ok); border-color: transparent; box-shadow: 0 8px 18px rgba(20,184,166,.3); }
+  .opt.s1.on { background: var(--grad-off); border-color: transparent; box-shadow: 0 8px 18px rgba(249,115,22,.28); }
+  .day.st3::before { background: var(--grad-ok); } .day.st1::before { background: var(--grad-off); } .day.stF::before { background: var(--grad); }
+  .me-card { background: var(--grad); border: 0; box-shadow: 0 16px 34px rgba(168,85,247,.32); }
+  .me-card .tag { background: rgba(255,255,255,.22); } .me-card .t-荒尾, .me-card .t-大牟田, .me-card .t-熊本 { color: #fff; }
+  .me-card .gapnote { color: #fff7c2; }
+  .col { background: rgba(245,243,252,.9); }
+  .nm { background: #fff; }
+  .nm.me { background: var(--grad); }
+  .banner.todo { background: linear-gradient(120deg, #fff4e0, #ffe8f0); }
+  .banner.done { background: linear-gradient(120deg, #e3f8ef, #e0f2fe); }
+  .banner.lock { background: linear-gradient(120deg, #eef0ff, #f5e9ff); }
+  .btn { background: var(--grad); box-shadow: 0 8px 18px rgba(168,85,247,.3); }
+  .btn.ghost { background: #efedf7; box-shadow: none; }
+  .chip.on { background: var(--grad); border-color: transparent; }
+  .pick button { background: rgba(255,255,255,.85); border: 1px solid rgba(255,255,255,.9); }
+  .hello { background: linear-gradient(120deg, #312e81, #9d174d); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .toast { background: #312e81; }
+  .busy { background: var(--grad); }
+  .who.admin .av { background: var(--grad); }
 </style>
 </head>
 <body>
@@ -210,7 +250,13 @@ function $(id) { return document.getElementById(id); }
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
 function store(k, v) { try { if (v === undefined) return localStorage.getItem(k); if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v); } catch (e) { return null; } }
 function toast(t, ms) { var el = $('toast'); el.textContent = t; el.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(function () { el.classList.remove('show'); }, ms || 1800); }
-function av(n) { return '<span class="av">' + esc(String(n).charAt(0)) + '</span>'; }
+// 名前ごとに色を変えたアイコン
+var AV_COLORS = [['#6366f1', '#a855f7'], ['#ec4899', '#f97316'], ['#14b8a6', '#22c55e'], ['#0ea5e9', '#6366f1'], ['#f59e0b', '#ef4444'], ['#8b5cf6', '#ec4899'], ['#10b981', '#0ea5e9'], ['#f43f5e', '#a855f7']];
+function av(n) {
+  var h = 0; String(n).split('').forEach(function (c) { h = (h * 31 + c.charCodeAt(0)) >>> 0; });
+  var c = AV_COLORS[h % AV_COLORS.length];
+  return '<span class="av" style="background:linear-gradient(135deg,' + c[0] + ',' + c[1] + ')">' + esc(String(n).charAt(0)) + '</span>';
+}
 function md(label) { var m = String(label).match(/^(\d+\/\d+)/); return m ? m[1] : label; }
 function dateHtml(label) { return '<div class="date"><b>' + esc(md(label)) + '</b><span>SAT</span></div>'; }
 function tag(c, extra) { return '<span class="tag t-' + c + '">' + esc(c) + (extra ? '（' + esc(extra) + '）' : '') + '</span>'; }
