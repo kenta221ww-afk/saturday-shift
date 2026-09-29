@@ -115,6 +115,8 @@
 
   /* admin */
   .vet { font-size: 10px; font-weight: 700; color: var(--warn-ink); background: var(--warn-soft); border-radius: 6px; padding: 1px 5px; margin-left: 2px; vertical-align: 1px; }
+  .nmb { border: 0; background: none; padding: 0; font: inherit; font-weight: 700; text-align: left; flex: 1; display: flex; align-items: center; gap: 2px; min-height: 22px; }
+  .nmb .mv { font-size: 11px; color: #a855f7; margin-left: auto; padding-right: 4px; }
   .x { border: 0; background: var(--soft); width: 22px; height: 22px; border-radius: 50%; font-size: 12px; line-height: 1; color: var(--sub); flex: 0 0 auto; }
   .add { border: 1.5px dashed #cfcfc8; background: transparent; border-radius: 10px; padding: 7px; font-size: 13px; font-weight: 700; color: var(--sub); }
   .chips { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -430,7 +432,7 @@ function renderAdmin(m) {
         if (!c[4] && !c[5]) return col + '<div class="note">休診</div></div>';
         col += '<div class="stepper sm" style="margin-bottom:8px"><button data-ad="' + c[6] + '" data-day="' + i + '" data-v="' + ((c[5] || 0) - 1) + '">−</button><span class="num">' + c[4] + '人</span><button data-ad="' + c[6] + '" data-day="' + i + '" data-v="' + ((c[5] || 0) + 1) + '">＋</button></div>';
         col += '<div class="names">' + c[2].map(function (p) {
-          return '<div class="nm' + (p[3] ? ' man' : '') + '"><span>' + (p[3] ? '📌' : '') + esc(p[0]) + (p[4] ? '<span class="vet">★</span>' : '') + '</span><button class="x" data-ad="assign" data-day="' + i + '" data-name="' + esc(p[0]) + '" data-v="X">✕</button></div>'; }).join('') +
+          return '<div class="nm' + (p[3] ? ' man' : '') + '"><button class="nmb" data-act="move" data-day="' + i + '" data-c="' + c[0] + '" data-name="' + esc(p[0]) + '">' + (p[3] ? '📌' : '') + esc(p[0]) + (p[4] ? '<span class="vet">★</span>' : '') + ' <span class="mv">⇄</span></button><button class="x" data-ad="assign" data-day="' + i + '" data-name="' + esc(p[0]) + '" data-v="X">✕</button></div>'; }).join('') +
           (c[3] ? '<div class="nm short">あと' + c[3] + '人</div>' : '') +
           '<button class="add" data-act="addsheet" data-day="' + i + '" data-c="' + c[0] + '">＋ 追加</button></div></div>';
         return col;
@@ -459,6 +461,35 @@ function openAdd(day, c) {
     list.map(item).join('') + (others.length ? '<div class="sec">ふだんは別の院の人</div>' + others.map(item).join('') : '');
   $('sheet').classList.add('show'); $('shade').classList.add('show');
 }
+// 名前をタップ → どこへ移すか選ぶ
+function openMove(day, c, name) {
+  var m = month(), d = m.days[day], st = S.data.staff.filter(function (s) { return s.name === name; })[0] || {};
+  var canK = st.where !== '分院のみ', canB = st.where !== '熊本のみ';
+  var here = c === 'K' ? '熊本' : d.branch;
+  var where = function (i) {
+    var x = m.result && m.result.days[i], w = '';
+    if (x) { x.k.forEach(function (p) { if (p[0] === name) w = '熊本'; }); x.b.forEach(function (p) { if (p[0] === name) w = m.days[i].branch; }); }
+    return w;
+  };
+  var btn = function (i, cc, label) {
+    var p = (m.pref[name] || [])[i] || '', pw = prefWord(p), now = where(i);
+    return '<button class="cand" data-act="domove" data-from="' + day + '" data-fc="' + c + '" data-day="' + i + '" data-c="' + cc + '" data-name="' + esc(name) + '"><span>' + label +
+      '<small>' + (now ? 'この日は ' + now + ' に入っています' : 'この日はまだ入っていません') + '</small></span><span class="st ' + pw[1] + '">' + pw[0] + '</span></button>';
+  };
+  var h = '<div class="grip"></div><h3>' + esc(name) + ' さん（' + esc(md(d.label)) + ' ' + esc(here) + '）</h3>';
+  var other = c === 'K' ? (canB && d.bNeed ? ['B', d.branch] : null) : (canK && d.kNeed ? ['K', '熊本'] : null);
+  if (other) h += '<div class="sec">同じ日のまま院を変える</div>' + btn(day, other[0], esc(md(d.label)) + ' ' + esc(other[1]) + ' へ移す');
+  h += '<div class="sec">ほかの日へ移す</div>';
+  m.days.forEach(function (dd, i) {
+    if (i === day) return;
+    if (canB && dd.bNeed) h += btn(i, 'B', esc(md(dd.label)) + ' ' + esc(dd.branch));
+    if (canK && dd.kNeed) h += btn(i, 'K', esc(md(dd.label)) + ' 熊本');
+  });
+  h += '<div style="margin-top:12px"><button class="btn ghost" data-ad="assign" data-day="' + day + '" data-name="' + esc(name) + '" data-v="X">この日から外す</button></div>';
+  $('sheet').innerHTML = h;
+  $('sheet').classList.add('show'); $('shade').classList.add('show');
+}
+
 function closeSheet() { $('sheet').classList.remove('show'); $('shade').classList.remove('show'); }
 
 function save(day, v) {
@@ -488,6 +519,17 @@ document.addEventListener('click', function (e) {
   if (ds.tab) { S.tab = ds.tab; render(); window.scrollTo(0, 0); return; }
   if (ds.act === 'lock') { var m0 = month(); if (confirm(m0.locked ? '作成中にもどしますか？' : m0.month + '月のシフトを確定しますか？（スタッフは変更できなくなります）')) admin('lock', { key: m0.key, value: !m0.locked }); return; }
   if (ds.act === 'addsheet') { openAdd(+ds.day, ds.c); return; }
+  if (ds.act === 'move') { openMove(+ds.day, ds.c, ds.name); return; }
+  if (ds.act === 'domove') {
+    closeSheet();
+    var mk = S.mk, from = +ds.from, to = +ds.day, nm = ds.name, cc = ds.c;
+    // 移動先に入れる → （別の日なら）元の日から外す
+    call('apiAdmin', [S.pin, 'assign', { key: mk, day: to, name: nm, value: cc }], function (d1) {
+      if (from === to) { S.data = d1; if (!S.busy) render(); toast('✓ 移しました'); return; }
+      call('apiAdmin', [S.pin, 'assign', { key: mk, day: from, name: nm, value: 'X' }], function (d2) { S.data = d2; if (!S.busy) render(); toast('✓ 移しました'); });
+    });
+    return;
+  }
   if (ds.ad) { closeSheet(); admin(ds.ad, { key: S.mk, day: +ds.day, name: ds.name, value: ds.ad === 'kextra' || ds.ad === 'bextra' ? Number(ds.v) : ds.v }); return; }
   if (ds.day != null && ds.v) {
     var m = month(), cur = m.pref[S.me][+ds.day];
