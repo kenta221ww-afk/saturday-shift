@@ -114,6 +114,7 @@
   .nm.man { box-shadow: inset 0 0 0 1.5px var(--kuma); }
 
   /* admin */
+  .vet { font-size: 10px; font-weight: 700; color: var(--warn-ink); background: var(--warn-soft); border-radius: 6px; padding: 1px 5px; margin-left: 2px; vertical-align: 1px; }
   .x { border: 0; background: var(--soft); width: 22px; height: 22px; border-radius: 50%; font-size: 12px; line-height: 1; color: var(--sub); flex: 0 0 auto; }
   .add { border: 1.5px dashed #cfcfc8; background: transparent; border-radius: 10px; padding: 7px; font-size: 13px; font-weight: 700; color: var(--sub); }
   .chips { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -356,14 +357,14 @@ function renderAdmin(m) {
         if (!c[4] && !c[5]) return col + '<div class="note">休診</div></div>';
         col += '<div class="stepper sm" style="margin-bottom:8px"><button data-ad="' + c[6] + '" data-day="' + i + '" data-v="' + ((c[5] || 0) - 1) + '">−</button><span class="num">' + c[4] + '人</span><button data-ad="' + c[6] + '" data-day="' + i + '" data-v="' + ((c[5] || 0) + 1) + '">＋</button></div>';
         col += '<div class="names">' + c[2].map(function (p) {
-          return '<div class="nm' + (p[3] ? ' man' : '') + '"><span>' + (p[3] ? '📌' : '') + esc(p[0]) + '</span><button class="x" data-ad="assign" data-day="' + i + '" data-name="' + esc(p[0]) + '" data-v="X">✕</button></div>'; }).join('') +
+          return '<div class="nm' + (p[3] ? ' man' : '') + '"><span>' + (p[3] ? '📌' : '') + esc(p[0]) + (p[4] ? '<span class="vet">★</span>' : '') + '</span><button class="x" data-ad="assign" data-day="' + i + '" data-name="' + esc(p[0]) + '" data-v="X">✕</button></div>'; }).join('') +
           (c[3] ? '<div class="nm short">あと' + c[3] + '人</div>' : '') +
           '<button class="add" data-act="addsheet" data-day="' + i + '" data-c="' + c[0] + '">＋ 追加</button></div></div>';
         return col;
       }).join('') + '</div>';
       if (x.rm && x.rm.length) h += '<div class="mini">外した人：' + x.rm.map(function (n) { return '<b>' + esc(n) + '</b> <button class="chip" data-ad="assign" data-day="' + i + '" data-name="' + esc(n) + '" data-v="">もどす</button>'; }).join(' ') + '</div>';
       if (x.na && x.na.length) h += '<div class="mini">未回答：' + esc(x.na.join('・')) + '</div>';
-      if (x.hs) h += '<div class="mini" style="color:var(--warn-ink)">⚠ ' + esc(d.branch) + '所属のCOがあと' + x.hs + '人ほしい</div>';
+      if (x.vg) h += '<div class="mini" style="color:var(--warn-ink);font-weight:700">⚠ 分院のベテランが' + (x.vg < 0 ? 'あと' + (-x.vg) + '人ほしい' : x.vg + '人多い') + '（★＝ベテラン。4人の日は2人、5人の日は2〜3人が目安）</div>';
     }
     h += '</div>';
   });
@@ -378,7 +379,7 @@ function openAdd(day, c) {
   var item = function (s) {
     var p = (m.pref[s.name] || [])[day] || '', w = prefWord(p), cnt = m.result && m.result.cnt[s.name] ? m.result.cnt[s.name][0] : 0;
     return '<button class="cand" data-ad="assign" data-day="' + day + '" data-name="' + esc(s.name) + '" data-v="' + c + '"><span>' + esc(s.name) +
-      '<small>今月 ' + cnt + '回 / 希望 ' + (m.desired[s.name] == null ? '-' : m.desired[s.name]) + '回' + (inDay[s.name] ? '・この日は' + inDay[s.name] : '') + '</small></span><span class="st ' + w[1] + '">' + w[0] + '</span></button>';
+      '<small>' + (s.vet ? '★ベテラン・' : '') + '今月 ' + cnt + '回 / 希望 ' + (m.desired[s.name] == null ? '-' : m.desired[s.name]) + '回' + (inDay[s.name] ? '・この日は' + inDay[s.name] : '') + '</small></span><span class="st ' + w[1] + '">' + w[0] + '</span></button>';
   };
   $('sheet').innerHTML = '<div class="grip"></div><h3>' + esc(md(d.label)) + ' ' + (c === 'K' ? '熊本' : esc(d.branch)) + ' に追加</h3>' +
     list.map(item).join('') + (others.length ? '<div class="sec">ふだんは別の院の人</div>' + others.map(item).join('') : '');
